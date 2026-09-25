@@ -1,0 +1,263 @@
+﻿  <Project Sdk="Microsoft.NET.Sdk">
+  
+    <PropertyGroup>
+      <TargetFramework>netstandard2.1</TargetFramework>
+      <AssemblyName>Physics_Items</AssemblyName>
+      <Description>Lethal Company Physics wooo!!</Description>
+      <Version>0.1.3</Version>
+      <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+      <LangVersion>latest</LangVersion>
+      <Nullable>enable</Nullable>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <Compile Remove="ModCompatFixes\ThrowEverythingCompatibility.cs" />
+      <Compile Remove="ModCompatFixes\LethalConfigCompatibility.cs" />
+    </ItemGroup>
+  
+    <ItemGroup>
+      <PackageReference Include="BepInEx.AssemblyPublicizer.MSBuild" Version="0.4.1" PrivateAssets="all" />
+      <PackageReference Include="BepInEx.Analyzers" Version="1.*" PrivateAssets="all" />
+      <PackageReference Include="BepInEx.Core" Version="5.*" />
+      <PackageReference Include="BepInEx.PluginInfoProps" Version="1.*" />
+      <PackageReference Include="UnityEngine.Modules" Version="2022.3.9" IncludeAssets="compile" />
+    </ItemGroup>
+    
+    <ItemGroup>
+      <Reference Include="0Harmony">
+        <HintPath>..\..\AppData\Roaming\com.kesomannen.gale\lethal-company\profiles\imperium\BepInEx\core\0Harmony.dll</HintPath>
+      </Reference>
+      <Reference Include="Assembly-CSharp" Publicize="true">
+        <HintPath>..\..\..\..\Program Files (x86)\Steam\steamapps\common\Lethal Company\Lethal Company_Data\Managed\Assembly-CSharp.dll</HintPath>
+      </Reference>
+      <Reference Include="Assembly-CSharp-firstpass">
+        <HintPath>..\..\..\..\Program Files (x86)\Steam\steamapps\common\Lethal Company\Lethal Company_Data\Managed\Assembly-CSharp-firstpass.dll</HintPath>
+      </Reference>
+      <Reference Include="BepInEx">
+        <HintPath>..\..\AppData\Roaming\com.kesomannen.gale\lethal-company\profiles\imperium\BepInEx\core\BepInEx.dll</HintPath>
+      </Reference>
+      <Reference Include="BepInEx.Harmony">
+        <HintPath>..\..\AppData\Roaming\com.kesomannen.gale\lethal-company\profiles\imperium\BepInEx\core\BepInEx.Harmony.dll</HintPath>
+      </Reference>
+      <Reference Include="BepInEx.Preloader">
+        <HintPath>..\..\AppData\Roaming\com.kesomannen.gale\lethal-company\profiles\imperium\BepInEx\core\BepInEx.Preloader.dll</HintPath>
+      </Reference>
+      <Reference Include="ClientNetworkTransform">
+        <HintPath>..\..\..\..\Program Files (x86)\Steam\steamapps\common\Lethal Company\Lethal Company_Data\Managed\ClientNetworkTransform.dll</HintPath>
+      </Reference>
+      <Reference Include="DunGen">
+        <HintPath>..\..\..\..\Program Files (x86)\Steam\steamapps\common\Lethal Company\Lethal Company_Data\Managed\DunGen.dll</HintPath>
+      </Reference>
+      <Reference Include="DunGen.Integration.ASPP">
+        <HintPath>..\..\..\..\Program Files (x86)\Steam\steamapps\common\Lethal Company\Lethal Company_Data\Managed\DunGen.Integration.ASPP.dll</HintPath>
+      </Reference>
+      <Reference Include="DunGen.Integration.UnityNav">
+        <HintPath>..\..\..\..\Program Files (x86)\Steam\steamapps\common\Lethal Company\Lethal Company_Data\Managed\DunGen.Integration.UnityNav.dll</HintPath>
+      </Reference>
+      <Reference Include="Facepunch Transport for Netcode for GameObjects">
+        <HintPath>..\..\..\..\Program Files (x86)\Steam\steamapps\common\Lethal Company\Lethal Company_Data\Managed\Facepunch Transport for Netcode for GameObjects.dll</HintPath>
+      </Reference>
+      <Reference Include="Facepunch.Steamworks.Win64">
+        <HintPath>..\..\..\..\Program Files (x86)\Steam\steamapps\common\Lethal Company\Lethal Company_Data\Managed\Facepunch.Steamworks.Win64.dll</HintPath>
+      </Reference>
+      <Reference Include="LCVR">
+        <HintPath>..\..\AppData\Roaming\com.kesomannen.gale\lethal-company\profiles\LCVR\BepInEx\plugins\DaXcess-LethalCompanyVR\LCVR\LCVR.dll</HintPath>
+      </Reference>
+      <Reference Include="LethalCompanyInputUtils">
+        <HintPath>..\..\AppData\Roaming\com.kesomannen.gale\lethal-company\profiles\Default\BepInEx\plugins\Rune580-LethalCompany_InputUtils\LethalCompanyInputUtils\LethalCompanyInputUtils.dll</HintPath>
+      </Reference>
+      <Reference Include="LethalConfig">
+        <HintPath>..\..\Videos\LethalConfig.dll</HintPath>
+      </Reference>
+      <Reference Include="LethalThings">
+        <HintPath>..\..\Users\panch\AppData\Roaming\com.kesomannen.gale\lethal-company\profiles\PhysicsItems\BepInEx\plugins\Evaisa-LethalThings\LethalThings\LethalThings.dll</HintPath>
+      </Reference>
+      <Reference Include="MMHOOK_AmazingAssets.TerrainToMesh">
+        <HintPath>..\..\Users\panch\AppData\Roaming\com.kesomannen.gale\lethal-company\profiles\PhysicsItems\BepInEx\plugins\MMHOOK\MMHOOK_AmazingAssets.TerrainToMesh.dll</HintPath>
+      </Reference>
+      <Reference Include="MMHOOK_Assembly-CSharp">
+        <HintPath>..\..\Users\panch\AppData\Roaming\com.kesomannen.gale\lethal-company\profiles\PhysicsItems\BepInEx\plugins\MMHOOK\MMHOOK_Assembly-CSharp.dll</HintPath>
+      </Reference>
+      <Reference Include="MMHOOK_ClientNetworkTransform">
+        <HintPath>..\..\Users\panch\AppData\Roaming\com.kesomannen.gale\lethal-company\profiles\PhysicsItems\BepInEx\plugins\MMHOOK\MMHOOK_ClientNetworkTransform.dll</HintPath>
+      </Reference>
+      <Reference Include="MMHOOK_DissonanceVoip">
+        <HintPath>..\..\Users\panch\AppData\Roaming\com.kesomannen.gale\lethal-company\profiles\PhysicsItems\BepInEx\plugins\MMHOOK\MMHOOK_DissonanceVoip.dll</HintPath>
+      </Reference>
+      <Reference Include="MMHOOK_Facepunch Transport for Netcode for GameObjects">
+        <HintPath>..\..\Users\panch\AppData\Roaming\com.kesomannen.gale\lethal-company\profiles\PhysicsItems\BepInEx\plugins\MMHOOK\MMHOOK_Facepunch Transport for Netcode for GameObjects.dll</HintPath>
+      </Reference>
+      <Reference Include="MMHOOK_Facepunch.Steamworks.Win64">
+        <HintPath>..\..\Users\panch\AppData\Roaming\com.kesomannen.gale\lethal-company\profiles\PhysicsItems\BepInEx\plugins\MMHOOK\MMHOOK_Facepunch.Steamworks.Win64.dll</HintPath>
+      </Reference>
+      <Reference Include="MoreShipUpgrades">
+        <HintPath>..\..\Users\panch\AppData\Roaming\com.kesomannen.gale\lethal-company\profiles\PhysicsItems\BepInEx\plugins\malco-Lategame_Upgrades\MoreShipUpgrades\MoreShipUpgrades.dll</HintPath>
+      </Reference>
+      <Reference Include="NeedyCats" Publicize="true">
+        <HintPath>..\..\Users\panch\AppData\Roaming\com.kesomannen.gale\lethal-company\profiles\PhysicsItems\BepInEx\plugins\Jordo-NeedyCats\NeedyCats.dll</HintPath>
+      </Reference>
+      <Reference Include="Newtonsoft.Json">
+        <HintPath>..\..\..\..\Program Files (x86)\Steam\steamapps\common\Lethal Company\Lethal Company_Data\Managed\Newtonsoft.Json.dll</HintPath>
+      </Reference>
+      <Reference Include="System">
+        <HintPath>..\..\..\..\Program Files (x86)\Steam\steamapps\common\Lethal Company\Lethal Company_Data\Managed\System.dll</HintPath>
+      </Reference>
+      <Reference Include="Unity.Animation.Rigging">
+        <HintPath>..\..\..\..\Program Files (x86)\Steam\steamapps\common\Lethal Company\Lethal Company_Data\Managed\Unity.Animation.Rigging.dll</HintPath>
+      </Reference>
+      <Reference Include="Unity.Animation.Rigging.DocCodeExamples">
+        <HintPath>..\..\..\..\Program Files (x86)\Steam\steamapps\common\Lethal Company\Lethal Company_Data\Managed\Unity.Animation.Rigging.DocCodeExamples.dll</HintPath>
+      </Reference>
+      <Reference Include="Unity.InputSystem">
+        <HintPath>..\..\..\..\Program Files (x86)\Steam\steamapps\common\Lethal Company\Lethal Company_Data\Managed\Unity.InputSystem.dll</HintPath>
+      </Reference>
+      <Reference Include="Unity.Multiplayer.Tools.Common">
+        <HintPath>..\..\..\..\Program Files (x86)\Steam\steamapps\common\Lethal Company\Lethal Company_Data\Managed\Unity.Multiplayer.Tools.Common.dll</HintPath>
+      </Reference>
+      <Reference Include="Unity.Multiplayer.Tools.MetricTypes">
+        <HintPath>..\..\..\..\Program Files (x86)\Steam\steamapps\common\Lethal Company\Lethal Company_Data\Managed\Unity.Multiplayer.Tools.MetricTypes.dll</HintPath>
+      </Reference>
+      <Reference Include="Unity.Multiplayer.Tools.NetStats">
+        <HintPath>..\..\..\..\Program Files (x86)\Steam\steamapps\common\Lethal Company\Lethal Company_Data\Managed\Unity.Multiplayer.Tools.NetStats.dll</HintPath>
+      </Reference>
+      <Reference Include="Unity.Multiplayer.Tools.NetStatsMonitor.Component">
+        <HintPath>..\..\..\..\Program Files (x86)\Steam\steamapps\common\Lethal Company\Lethal Company_Data\Managed\Unity.Multiplayer.Tools.NetStatsMonitor.Component.dll</HintPath>
+      </Reference>
+      <Reference Include="Unity.Multiplayer.Tools.NetStatsMonitor.Configuration">
+        <HintPath>..\..\..\..\Program Files (x86)\Steam\steamapps\common\Lethal Company\Lethal Company_Data\Managed\Unity.Multiplayer.Tools.NetStatsMonitor.Configuration.dll</HintPath>
+      </Reference>
+      <Reference Include="Unity.Multiplayer.Tools.NetStatsMonitor.Implementation">
+        <HintPath>..\..\..\..\Program Files (x86)\Steam\steamapps\common\Lethal Company\Lethal Company_Data\Managed\Unity.Multiplayer.Tools.NetStatsMonitor.Implementation.dll</HintPath>
+      </Reference>
+      <Reference Include="Unity.Multiplayer.Tools.NetStatsReporting">
+        <HintPath>..\..\..\..\Program Files (x86)\Steam\steamapps\common\Lethal Company\Lethal Company_Data\Managed\Unity.Multiplayer.Tools.NetStatsReporting.dll</HintPath>
+      </Reference>
+      <Reference Include="Unity.Multiplayer.Tools.NetworkProfiler.Runtime">
+        <HintPath>..\..\..\..\Program Files (x86)\Steam\steamapps\common\Lethal Company\Lethal Company_Data\Managed\Unity.Multiplayer.Tools.NetworkProfiler.Runtime.dll</HintPath>
+      </Reference>
+      <Reference Include="Unity.Multiplayer.Tools.NetworkSolutionInterface">
+        <HintPath>..\..\..\..\Program Files (x86)\Steam\steamapps\common\Lethal Company\Lethal Company_Data\Managed\Unity.Multiplayer.Tools.NetworkSolutionInterface.dll</HintPath>
+      </Reference>
+      <Reference Include="Unity.Netcode.Components">
+        <HintPath>..\..\..\..\Program Files (x86)\Steam\steamapps\common\Lethal Company\Lethal Company_Data\Managed\Unity.Netcode.Components.dll</HintPath>
+      </Reference>
+      <Reference Include="Unity.Netcode.Components">
+        <HintPath>..\..\Program Files (x86)\Steam\steamapps\common\Lethal Company\Lethal Company_Data\Managed\Unity.Netcode.Components.dll</HintPath>
+      </Reference>
+      <Reference Include="Unity.Netcode.Runtime">
+        <HintPath>..\..\..\..\Program Files (x86)\Steam\steamapps\common\Lethal Company\Lethal Company_Data\Managed\Unity.Netcode.Runtime.dll</HintPath>
+      </Reference>
+      <Reference Include="Unity.Networking.Transport">
+        <HintPath>..\..\..\..\Program Files (x86)\Steam\steamapps\common\Lethal Company\Lethal Company_Data\Managed\Unity.Networking.Transport.dll</HintPath>
+      </Reference>
+      <Reference Include="Unity.TextMeshPro">
+        <HintPath>..\..\..\..\Program Files (x86)\Steam\steamapps\common\Lethal Company\Lethal Company_Data\Managed\Unity.TextMeshPro.dll</HintPath>
+      </Reference>
+      <Reference Include="UnityEngine">
+        <HintPath>..\..\..\..\Program Files (x86)\Steam\steamapps\common\Lethal Company\Lethal Company_Data\Managed\UnityEngine.dll</HintPath>
+      </Reference>
+      <Reference Include="UnityEngine.AIModule">
+        <HintPath>..\..\..\..\Program Files (x86)\Steam\steamapps\common\Lethal Company\Lethal Company_Data\Managed\UnityEngine.AIModule.dll</HintPath>
+      </Reference>
+      <Reference Include="UnityEngine.AnimationModule">
+        <HintPath>..\..\..\..\Program Files (x86)\Steam\steamapps\common\Lethal Company\Lethal Company_Data\Managed\UnityEngine.AnimationModule.dll</HintPath>
+      </Reference>
+      <Reference Include="UnityEngine.AudioModule">
+        <HintPath>..\..\..\..\Program Files (x86)\Steam\steamapps\common\Lethal Company\Lethal Company_Data\Managed\UnityEngine.AudioModule.dll</HintPath>
+      </Reference>
+      <Reference Include="UnityEngine.CoreModule">
+        <HintPath>..\..\..\..\Program Files (x86)\Steam\steamapps\common\Lethal Company\Lethal Company_Data\Managed\UnityEngine.CoreModule.dll</HintPath>
+      </Reference>
+      <Reference Include="UnityEngine.InputLegacyModule">
+        <HintPath>..\..\..\..\Program Files (x86)\Steam\steamapps\common\Lethal Company\Lethal Company_Data\Managed\UnityEngine.InputLegacyModule.dll</HintPath>
+      </Reference>
+      <Reference Include="UnityEngine.InputModule">
+        <HintPath>..\..\..\..\Program Files (x86)\Steam\steamapps\common\Lethal Company\Lethal Company_Data\Managed\UnityEngine.InputSystem.dll</HintPath>
+      </Reference>
+      <Reference Include="UnityEngine.JSONSerializeModule">
+        <HintPath>..\..\..\..\Program Files (x86)\Steam\steamapps\common\Lethal Company\Lethal Company_Data\Managed\UnityEngine.JSONSerializeModule.dll</HintPath>
+      </Reference>
+      <Reference Include="UnityEngine.PhysicsModule">
+        <HintPath>..\..\..\..\Program Files (x86)\Steam\steamapps\common\Lethal Company\Lethal Company_Data\Managed\UnityEngine.PhysicsModule.dll</HintPath>
+      </Reference>
+      <Reference Include="UnityEngine.TextCoreFontEngineModule">
+        <HintPath>..\..\..\..\Program Files (x86)\Steam\steamapps\common\Lethal Company\Lethal Company_Data\Managed\UnityEngine.TextCoreFontEngineModule.dll</HintPath>
+      </Reference>
+      <Reference Include="UnityEngine.TextCoreTextEngineModule">
+        <HintPath>..\..\..\..\Program Files (x86)\Steam\steamapps\common\Lethal Company\Lethal Company_Data\Managed\UnityEngine.TextCoreTextEngineModule.dll</HintPath>
+      </Reference>
+      <Reference Include="UnityEngine.TextRenderingModule">
+        <HintPath>..\..\..\..\Program Files (x86)\Steam\steamapps\common\Lethal Company\Lethal Company_Data\Managed\UnityEngine.TextRenderingModule.dll</HintPath>
+      </Reference>
+      <Reference Include="UnityEngine.UI">
+        <HintPath>..\..\..\..\Program Files (x86)\Steam\steamapps\common\Lethal Company\Lethal Company_Data\Managed\UnityEngine.UI.dll</HintPath>
+      </Reference>
+      <Reference Include="UnityEngine.UIElementsModule">
+        <HintPath>..\..\..\..\Program Files (x86)\Steam\steamapps\common\Lethal Company\Lethal Company_Data\Managed\UnityEngine.UIElementsModule.dll</HintPath>
+      </Reference>
+      <Reference Include="UnityEngine.UIModule">
+        <HintPath>..\..\..\..\Program Files (x86)\Steam\steamapps\common\Lethal Company\Lethal Company_Data\Managed\UnityEngine.UIModule.dll</HintPath>
+      </Reference>
+      <Reference Include="UnityEngine.UnityWebRequestAssetBundleModule">
+        <HintPath>..\..\..\..\Program Files (x86)\Steam\steamapps\common\Lethal Company\Lethal Company_Data\Managed\UnityEngine.UnityWebRequestAssetBundleModule.dll</HintPath>
+      </Reference>
+      <Reference Include="UnityEngine.UnityWebRequestAudioModule">
+        <HintPath>..\..\..\..\Program Files (x86)\Steam\steamapps\common\Lethal Company\Lethal Company_Data\Managed\UnityEngine.UnityWebRequestAudioModule.dll</HintPath>
+      </Reference>
+      <Reference Include="UnityEngine.UnityWebRequestModule">
+        <HintPath>..\..\..\..\Program Files (x86)\Steam\steamapps\common\Lethal Company\Lethal Company_Data\Managed\UnityEngine.UnityWebRequestModule.dll</HintPath>
+      </Reference>
+      <Reference Include="UnityEngine.UnityWebRequestTextureModule">
+        <HintPath>..\..\..\..\Program Files (x86)\Steam\steamapps\common\Lethal Company\Lethal Company_Data\Managed\UnityEngine.UnityWebRequestTextureModule.dll</HintPath>
+      </Reference>
+      <Reference Include="UnityEngine.UnityWebRequestWWWModule">
+        <HintPath>..\..\..\..\Program Files (x86)\Steam\steamapps\common\Lethal Company\Lethal Company_Data\Managed\UnityEngine.UnityWebRequestWWWModule.dll</HintPath>
+      </Reference>
+      <Reference Include="UnityEngine.VehiclesModule">
+        <HintPath>..\..\..\..\Program Files (x86)\Steam\steamapps\common\Lethal Company\Lethal Company_Data\Managed\UnityEngine.VehiclesModule.dll</HintPath>
+      </Reference>
+      <Reference Include="UnityEngine.XRModule">
+        <HintPath>..\..\..\..\Program Files (x86)\Steam\steamapps\common\Lethal Company\Lethal Company_Data\Managed\UnityEngine.XRModule.dll</HintPath>
+      </Reference>
+    </ItemGroup>
+    
+    <!-- make all references non-private, so they won't be copied to the output folder -->
+    <Target Name="ClearReferenceCopyLocalPaths" AfterTargets="ResolveAssemblyReferences">
+      <ItemGroup>
+        <ReferenceCopyLocalPaths Remove="@(ReferenceCopyLocalPaths)" />
+      </ItemGroup>
+    </Target>
+    
+    <ItemGroup Condition="'$(TargetFramework.TrimEnd(`0123456789`))' == 'net'">
+      <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.2" PrivateAssets="all" />
+    </ItemGroup>
+    
+    <ItemGroup>
+      <Compile Update="Properties\Resources.Designer.cs">
+        <DesignTime>True</DesignTime>
+        <AutoGen>True</AutoGen>
+        <DependentUpon>Resources.resx</DependentUpon>
+      </Compile>
+    </ItemGroup>
+
+    <PropertyGroup>
+      <TEST_PROFILE_DIR>C:\Users\panch\AppData\Roaming\com.kesomannen.gale\lethal-company\profiles\PhysicsItems\BepInEx\plugins\Ryokune-Physics_Items</TEST_PROFILE_DIR>
+      <MOD_OUTPUT_NAME>Ryokune-Physics_Items</MOD_OUTPUT_NAME>
+    </PropertyGroup>
+
+    <Target Name="CopyToTestProfile" AfterTargets="Build">
+      <PropertyGroup>
+        <PluginTargetDir>C:\Users\panch\AppData\Roaming\com.kesomannen.gale\lethal-company\profiles\PhysicsItems\BepInEx\plugins\Ryokune-Physics_Items</PluginTargetDir>
+      </PropertyGroup>
+      <MakeDir Directories="$(PluginTargetDir)" Condition="!Exists('$(PluginTargetDir)')" />
+      <Copy SourceFiles="$(TargetPath)" DestinationFolder="$(PluginTargetDir)" />
+      <Copy SourceFiles="$(TargetDir)$(TargetName).pdb" DestinationFolder="$(PluginTargetDir)" Condition="Exists('$(TargetDir)$(TargetName).pdb')" />
+    </Target>
+    
+    <ItemGroup>
+      <EmbeddedResource Update="Properties\Resources.resx">
+        <Generator>ResXFileCodeGenerator</Generator>
+        <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+      </EmbeddedResource>
+    </ItemGroup>
+  </Project>
