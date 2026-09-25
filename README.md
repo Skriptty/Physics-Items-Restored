@@ -1,4 +1,9 @@
 # Ryokune-PhysicsItems
+
+
+- BEFORE YOU KEEP ON READING, ALL CREDIT TO VisualError/Ryokune for making the mod, i just restored it up to V81
+
+
 I need a better icon. (This mod also works with [ThrowEverything Mod](https://thunderstore.io/c/lethal-company/p/Spantle/ThrowEverything/))
 ### Known Incompatibilities:
 - https://github.com/VisualError/Physics-Items/labels/compatibility%20issue
