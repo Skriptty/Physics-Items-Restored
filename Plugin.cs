@@ -13,7 +13,7 @@ using Unity.Netcode.Components;
 using UnityEngine;
 using System.IO;
 using System.Reflection;
-using System.Text.RegularExpressions;
+using GameNetcodeStuff;
 
 namespace Physics_Items
 {
@@ -30,7 +30,7 @@ namespace Physics_Items
         internal static Plugin Instance;
         internal bool Initialized = false;
         internal bool ServerHasMod = false;
-        internal HashSet<string> manualSkipNames = new HashSet<string> { "Hive", "Soccer ball" };
+        internal HashSet<string> manualSkipNames = new HashSet<string> { "Hive", "Beehive", "Bee hive", "RedLocustHive", "RedLocustHive(Clone)", "SoccerBall", "SoccerBall(Clone)" };
         internal HashSet<Type> manualSkipList = new HashSet<Type>();
         internal HashSet<Type> blockList = new HashSet<Type>();
         string configDirectory = Paths.ConfigPath;
@@ -42,11 +42,14 @@ namespace Physics_Items
         internal ConfigEntry<bool> InitializeConfigs;
         internal ConfigEntry<bool> DebuggingStuff;
         internal ConfigEntry<float> DiscardFollowAmplitude;
+        internal ConfigEntry<bool> freezeInShip;
         
-       
         internal ConfigEntry<float> explosionForceMultiplier;
         internal ConfigEntry<bool> enableCollisionAudio;
         internal ConfigEntry<bool> enableDropImpulse;
+        
+        internal ConfigEntry<KeyCode> throwKey;
+        internal ConfigEntry<float> throwForce;
 
         internal ConfigFile customBlockList;
         internal Dictionary<string, GrabbableObject> allItemsDictionary = new Dictionary<string, GrabbableObject>();
@@ -54,6 +57,7 @@ namespace Physics_Items
         internal readonly Harmony Harmony = new(PluginInfo.PLUGIN_GUID);
 
         internal SkipObjectSet skipObject = new SkipObjectSet();
+
         private void Awake()
         {
             if (Instance == null)
@@ -81,26 +85,36 @@ namespace Physics_Items
             #region "Harmony Patches"
             Harmony.PatchAll(typeof(ModCheck));
             Harmony.PatchAll(typeof(OnCollision));
+            Harmony.PatchAll(typeof(ItemThrowPatches));
             myAssembly = Assembly.GetExecutingAssembly();
             manualSkipList.Add(typeof(ExtensionLadderItem));
             manualSkipList.Add(typeof(RadarBoosterItem));
             #endregion
 
-            #region "Configs"[cite: 17]
-            InitializeConfigs = Config.Bind("Technical", "Initialize Configs", true, "Re-Initializes all configs when set to true");
+            #region "Configs"
+            InitializeConfigs = Config.Bind("Technical", "Initialize Configs", false, "Re-Initializes all configs when set to true");
             customBlockList = new ConfigFile(Path.Combine(configDirectory, "physicsItems_CustomBlockList.cfg"), true);
             useSourceSounds = Config.Bind("Fun", "Use Source Engine Collision Sounds", false, "Use source rigidbody sounds.");
             overrideAllItemPhysics = Config.Bind("Fun", "Override all Item Physics", false, "ALL Items will have physics, regardless of blocklist.");
-            physicsOnPickup = Config.Bind("Physics Behaviour", "Physics On Pickup", false, "Only enable item physisc when it has been picked up at least once.");
-            disablePlayerCollision = Config.Bind("Physics Behaviour", "Disable Player Collision", false, "Set if Physical Items can collide with players.");
+            physicsOnPickup = Config.Bind("Physics Behaviour", "Physics On Pickup", true, "Only enable item physics when it has been picked up at least once.");
+            disablePlayerCollision = Config.Bind("Physics Behaviour", "Disable Player Collision", true, "Set if Physical Items can collide with players.");
             maxCollisionVolume = Config.Bind("Physics Behaviour", "Max Collision Volume", 4f, "Sets the max volume each collision should have.");
             DebuggingStuff = Config.Bind("Technical", "Debug", false, "Debug mode");
-            DiscardFollowAmplitude = Config.Bind("Physics Behaviour", "Discard Follow Aplitude", 36f, "Sets how strong items should go with the players velocity. In VR this sets how hard you'll be able to throw items.");
+            freezeInShip = Config.Bind("Physics Behaviour", "Freeze In Ship", true, "If enabled, physical items will freeze in place and behave like Vanilla items while inside the ship or elevator.");
+            DiscardFollowAmplitude = Config.Bind("Physics Behaviour", "Discard Follow Amplitude", 1f, "Sets how strong items should go with the players velocity.");
             
+            explosionForceMultiplier = Config.Bind("Physics Behaviour", "Explosion Force Multiplier", 80f, "Multiplies how much blast knockback should the mines give the items.");
+            enableCollisionAudio = Config.Bind("Fun", "Enable Collision Audio", true, "Enables or disables collision sound effects.");
+            enableDropImpulse = Config.Bind("Physics Behaviour", "Enable Drop Impulse", true, "If enabled, items will obtain the momentum of the player.");
             
-            explosionForceMultiplier = Config.Bind("Physics Behaviour", "Explosion Force Multiplier", 80f, "Multiplicador de fuerza para las minas terrestres en los objetos.");
-            enableCollisionAudio = Config.Bind("Fun", "Enable Collision Audio", true, "Activa o desactiva los sonidos de impacto por colisión.");
-            enableDropImpulse = Config.Bind("Physics Behaviour", "Enable Drop Impulse", true, "Si está activo, los objetos heredan el impulso/inercia al soltarlos.");
+            throwKey = Config.Bind("Controls", "Throw Item Key", KeyCode.Mouse1, "Tecla para lanzar cualquier objeto que tengas en la mano.");
+            throwForce = Config.Bind("Controls", "Throw Force", 16f, "Fuerza con la que se lanzan los objetos.");
+            throwKey.SettingChanged += OnThrowKeyChanged;
+
+            if (disablePlayerCollision.Value)
+            {
+                UnityEngine.Physics.IgnoreLayerCollision(3, 6, true);
+            }
 
             customBlockList.SettingChanged += CustomBlockList_SettingChanged;
             Config.SettingChanged += Config_SettingChanged;
@@ -115,7 +129,7 @@ namespace Physics_Items
             }
             #endregion
 
-            #region "MonoMod Hooks"[cite: 17]
+            #region "MonoMod Hooks"
             ItemPhysics.Environment.Landmine.Init();
             GrabbablePatches.Init();
             On.GameNetcodeStuff.PlayerControllerB.PlaceGrabbableObject += PlayerControllerB_PlaceGrabbableObject;
@@ -123,6 +137,15 @@ namespace Physics_Items
             On.GameNetcodeStuff.PlayerControllerB.DropAllHeldItems += PlayerControllerB_DropAllHeldItems;
             On.GameNetworkManager.Awake += GameNetworkManager_Awake;
             #endregion
+        }
+
+        private void OnThrowKeyChanged(object sender, EventArgs e)
+        {
+            PlayerControllerB localPlayer = GameNetworkManager.Instance?.localPlayerController;
+            if (localPlayer != null && localPlayer.currentlyHeldObjectServer != null)
+            {
+                ItemThrowPatches.UpdateItemControlTip(localPlayer.currentlyHeldObjectServer);
+            }
         }
 
         private void GameNetworkManager_Awake(On.GameNetworkManager.orig_Awake orig, GameNetworkManager self)
@@ -139,25 +162,23 @@ namespace Physics_Items
         private void CustomBlockList_SettingChanged(object sender, SettingChangedEventArgs e)
         {
             if (overrideAllItemPhysics.Value) return;
-            Logger.LogWarning($"Changed Blocklist: {e.ChangedSetting.Definition.Section} to {e.ChangedSetting.GetSerializedValue()}");
-            var grabbable = allItemsDictionary[e.ChangedSetting.Definition.Section];
+            Logger.LogWarning($"Changed Blocklist: {e.ChangedSetting.Definition.Key} to {e.ChangedSetting.GetSerializedValue()}");
+            
+            string itemTypeName = e.ChangedSetting.Definition.Key;
             List<GrabbableObject> grabbableList = FindObjectsByType<GrabbableObject>(FindObjectsInactive.Exclude, FindObjectsSortMode.None).ToList();
-            if (e.ChangedSetting.GetSerializedValue() == "true")
+            
+            bool isBlocked = e.ChangedSetting.GetSerializedValue() == "true";
+            
+            foreach (var grab in grabbableList)
             {
-                foreach(var grab in grabbableList)
+                if (grab.GetType().Name == itemTypeName)
                 {
-                    if(grab.GetType() == grabbable.GetType())
+                    if (isBlocked)
                     {
                         skipObject.Add(grab);
                         blockList.Add(grab.GetType());
                     }
-                }
-            }
-            else
-            {
-                foreach (var grab in grabbableList)
-                {
-                    if (grab.GetType() == grabbable.GetType())
+                    else
                     {
                         skipObject.Remove(grab);
                         blockList.Remove(grab.GetType());
@@ -185,36 +206,24 @@ namespace Physics_Items
 
         private void InitializeBlocklistConfig(GrabbableObject grabbableObject)
         {
-            var value = false;
-            var name = "";
-            if(grabbableObject == null) return;
-            if (grabbableObject.itemProperties == null) return;
-            if (grabbableObject.itemProperties.itemName.IsNullOrWhiteSpace())
-            {
-                name = grabbableObject.itemProperties.name;
-            }
-            else
-            {
-                name = grabbableObject.itemProperties.itemName;
-            }
-            name = StringUtil.SanitizeString(ref name);
-            if (name.IsNullOrWhiteSpace()) return;
-            if (manualSkipList.Contains(grabbableObject.GetType()) || manualSkipNames.Contains(name)) value = true;
-            allItemsDictionary[name] = grabbableObject;
-            ConfigDefinition configDef = new ConfigDefinition(name, "Add to blocklist");
-            customBlockList.Bind(configDef, value, new ConfigDescription("If check/true, adds to blocklist. [REQUIRES RESTART]"));
-            if (InitializeConfigs.Value)
-            {
-                customBlockList[configDef].BoxedValue = value;
-            }
-            if (customBlockList[configDef].GetSerializedValue() == "true")
+            if (grabbableObject == null || grabbableObject.itemProperties == null) return;
+
+            Type itemType = grabbableObject.GetType();
+            bool isDefaultBlocked = manualSkipList.Contains(itemType);
+
+            string configKey = itemType.Name;
+            ConfigDefinition configDef = new ConfigDefinition("BlockList", configKey);
+
+            var configEntry = customBlockList.Bind(configDef, isDefaultBlocked, new ConfigDescription($"Si está en true, desactiva las físicas para {configKey}."));
+
+            if (configEntry.Value)
             {
                 skipObject.Add(grabbableObject);
-                blockList.Add(grabbableObject.GetType());
+                blockList.Add(itemType);
             }
         }
 
-        #region "MonoMod Patches"[cite: 17]
+        #region "MonoMod Patches"
         private void PlayerControllerB_DropAllHeldItems(
             On.GameNetcodeStuff.PlayerControllerB.orig_DropAllHeldItems orig,
             GameNetcodeStuff.PlayerControllerB self,
@@ -260,10 +269,24 @@ namespace Physics_Items
         private void PlayerControllerB_SetObjectAsNoLongerHeld(On.GameNetcodeStuff.PlayerControllerB.orig_SetObjectAsNoLongerHeld orig, GameNetcodeStuff.PlayerControllerB self, bool droppedInElevator, bool droppedInShipRoom, Vector3 targetFloorPosition, GrabbableObject dropObject, int floorYRot)
         {
             orig(self, droppedInElevator, droppedInShipRoom, targetFloorPosition, dropObject, floorYRot);
-            if (skipObject.Contains(dropObject)) return;
-            Utils.Physics.GetPhysicsComponent(dropObject.gameObject, out PhysicsComponent comp);
-            if (comp == null) return;
+
+            if (dropObject == null || skipObject.Contains(dropObject)) return;
+
+            if (!Utils.Physics.GetPhysicsComponent(dropObject.gameObject, out PhysicsComponent comp)) return;
+
+            comp.heldVelocityNormalized = Vector3.zero;
+            comp.heldVelocityMagnitudeSqr = 0f;
+
+            if (comp.rigidbody == null) return;
+
+            comp.rigidbody.isKinematic = false;
+            comp.rigidbody.collisionDetectionMode = CollisionDetectionMode.ContinuousSpeculative;
             
+            if (ItemThrowPatches.PendingThrowImpulses.ContainsKey(dropObject))
+            {
+                return;
+            }
+
             if (!enableDropImpulse.Value)
             {
                 comp.rigidbody.velocity = Vector3.zero;
@@ -271,59 +294,11 @@ namespace Physics_Items
                 return;
             }
 
-            Vector3 startPosition = new Vector3(dropObject.startFallingPosition.x, 0, dropObject.startFallingPosition.z);
-            Vector3 targetPosition = new Vector3(dropObject.targetFloorPosition.x, 0, dropObject.targetFloorPosition.z);
+            Vector3 playerVelocity = self.thisController != null ? self.thisController.velocity : Vector3.zero;
 
-            float distance = CalculateDistance(startPosition, targetPosition);
-            Vector3 direction = CalculateDirection(targetPosition, startPosition);
-            bool isThrown = IsThrown(distance);
-            float throwForce = CalculateThrowForce(isThrown, comp.throwForce);
-            float forceMultiplier = CalculateForceMultiplier(isThrown, distance, throwForce, comp.rigidbody.mass);
-            Vector3 force = CalculateForce(forceMultiplier, direction, comp, isThrown);
-
-            ApplyForce(comp, force);
+            comp.rigidbody.velocity = playerVelocity * DiscardFollowAmplitude.Value;
+            comp.rigidbody.angularVelocity = Vector3.zero;
         }
-
-        private const float MinThrowForce = 36f;
-        private const float MaxForceMultiplier = 10f;
-
-        private float CalculateDistance(Vector3 startPosition, Vector3 targetPosition)
-        {
-            return (startPosition - targetPosition).magnitude;
-        }
-
-        private Vector3 CalculateDirection(Vector3 targetPosition, Vector3 startPosition)
-        {
-            return (targetPosition - startPosition).normalized;
-        }
-
-        private bool IsThrown(float distance)
-        {
-            return distance > 1f;
-        }
-
-        private float CalculateThrowForce(bool isThrown, float throwForce)
-        {
-            return isThrown ? Mathf.Min(throwForce, MinThrowForce) : 0f;
-        }
-
-        private float CalculateForceMultiplier(bool isThrown, float distance, float throwForce, float mass)
-        {
-            return isThrown ? Mathf.Min(distance * throwForce, mass * MaxForceMultiplier) : 0f;
-        }
-
-        private Vector3 CalculateForce(float forceMultiplier, Vector3 direction, PhysicsComponent comp, bool isThrown)
-        {
-            Vector3 baseForce = isThrown ? direction * forceMultiplier : Vector3.zero;
-            Vector3 velocityForce = comp.heldVelocityNormalized * DiscardFollowAmplitude.Value * comp.rigidbody.mass * Utils.Physics.FastInverseSqrt(comp.heldVelocityMagnitudeSqr);
-            return baseForce + velocityForce;
-        }
-
-        private void ApplyForce(PhysicsComponent comp, Vector3 force)
-        {
-            comp.rigidbody.AddForce(force, ForceMode.Impulse);
-        }
-
         #endregion
     }
 }
