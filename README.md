@@ -1,26 +1,25 @@
-# SagTag-PhysicsItemsRestored
+# SagTag-Physics-Items-Restored
 
 
-- BEFORE YOU KEEP ON READING, ALL CREDIT TO VisualError/Ryokune for making the mod, i just restored it up to V81
+- BEFORE YOU KEEP ON READING, ALL CREDIT TO VisualError/Ryokune for making the mod, i just restored it up to V81, if you find bugs, make an issue in the GitHub repo or look for the thread in mod releases in the lethal company modding server
 
 
-I need a better icon. (This mod also works with [ThrowEverything Mod](https://thunderstore.io/c/lethal-company/p/Spantle/ThrowEverything/))
 ### Known Incompatibilities:
-- https://github.com/VisualError/Physics-Items/labels/compatibility%20issue
+- https://github.com/Skriptty/Physics-Items-Restored/labels/compatibility
 
 ### Known Bugs/Issues:
 - Items may sometimes phase out of existence for the client until picked up by the server when landing the ship.
 - Sometimes the items will jumpscare you with its collision sounds. (I have been trying to fix this for hours)
-- https://github.com/VisualError/Physics-Items/labels/bug
+- https://github.com/Skriptty/Physics-Items-Restored/labels/bug
 
 
 ## BUG REPORTING:
-- I will only consider bugs reported at: https://github.com/VisualError/Physics-Items/issues/new/choose
+- I will only consider bugs reported at: https://github.com/Skriptty/Physics-Items-Restored/issues/new
 
 ## Installation
 
 1. Ensure you have [BepInEx](https://thunderstore.io/c/lethal-company/p/BepInEx/BepInExPack/) installed.
-2. Download the latest release of the Physics Items mod from [Thunderstore](https://thunderstore.io/c/lethal-company/p/Ryokune/Physics_Items).
+2. Download the latest release of the Physics Items mod from [Thunderstore](https://thunderstore.io/c/lethal-company/p/SagTag/Physics_Items_Restored).
 3. Extract the contents into your Lethal Company's `BepInEx/plugins` folder.
 
 ## Contributing
