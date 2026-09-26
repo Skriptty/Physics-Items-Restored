@@ -18,10 +18,34 @@ namespace Physics_Items.ItemPhysics
             On.GrabbableObject.OnPlaceObject += GrabbableObject_OnPlaceObject;
             On.GrabbableObject.ItemActivate += GrabbableObject_ItemActivate;
             On.GrabbableObject.GrabItem += GrabbableObject_GrabItem;
-            
             On.GrabbableObject.DiscardItem += GrabbableObject_DiscardItem;
         }
+        
+        internal static bool IsItemSkipped(GrabbableObject item)
+        {
+            if (item == null) return true;
+            
+            if (Plugin.Instance.blockList.Contains(item.GetType()) || 
+                Plugin.Instance.manualSkipList.Contains(item.GetType()))
+            {
+                return true;
+            }
+            
+            if (item.itemProperties != null && !string.IsNullOrEmpty(item.itemProperties.itemName))
+            {
+                string name = item.itemProperties.itemName;
 
+                foreach (string skipName in Plugin.Instance.manualSkipNames)
+                {
+                    if (string.Equals(name, skipName, StringComparison.OrdinalIgnoreCase))
+                    {
+                        return true;
+                    }
+                }
+            }
+
+            return false;
+        }
         private static void GrabbableObject_DiscardItem(On.GrabbableObject.orig_DiscardItem orig, GrabbableObject self)
         {
             orig(self); 
@@ -32,6 +56,8 @@ namespace Physics_Items.ItemPhysics
             {
                 if (component.rigidbody != null)
                 {
+                    if (ItemThrowPatches.PendingThrowImpulses.ContainsKey(self)) return;
+
                     component.rigidbody.velocity = Vector3.zero;
                     component.rigidbody.angularVelocity = Vector3.zero;
                 }
@@ -43,7 +69,7 @@ namespace Physics_Items.ItemPhysics
             if (grabbableObject == null || grabbableObject.gameObject == null) return null;
             if (grabbableObject.gameObject.GetComponent<NetworkObject>() == null) return null;
             
-            if (Plugin.Instance.blockList.Contains(grabbableObject.GetType()) || Plugin.Instance.manualSkipList.Contains(grabbableObject.GetType()))
+            if (IsItemSkipped(grabbableObject))
             {
                 if (!Plugin.Instance.overrideAllItemPhysics.Value)
                 {
@@ -52,7 +78,7 @@ namespace Physics_Items.ItemPhysics
                         grabbableObject.gameObject.AddComponent<DestroyHelper>();
                     }
                     Plugin.Instance.skipObject.Add(grabbableObject);
-                    return null;
+                    return null; 
                 }
             }
 
@@ -102,6 +128,20 @@ namespace Physics_Items.ItemPhysics
         {
             orig(self);
             
+            if (IsItemSkipped(self) && !Plugin.Instance.overrideAllItemPhysics.Value)
+            {
+                if (Utils.Physics.GetPhysicsComponent(self.gameObject, out PhysicsComponent existingComp))
+                {
+                    UnityEngine.Object.Destroy(existingComp);
+                }
+                if (self.gameObject.GetComponent<DestroyHelper>() == null)
+                {
+                    self.gameObject.AddComponent<DestroyHelper>();
+                }
+                Plugin.Instance.skipObject.Add(self);
+                return;
+            }
+
             if (self == null || Utils.Physics.GetPhysicsComponent(self.gameObject) != null) return;
             
             PhysicsComponent comp = AddPhysicsComponent(self);
@@ -116,6 +156,15 @@ namespace Physics_Items.ItemPhysics
         {
             orig(self);
             if (!Utils.Physics.GetPhysicsComponent(self.gameObject, out PhysicsComponent comp)) return;
+            
+            bool isPermanentlySkipped = IsItemSkipped(self);
+            
+            if (!isPermanentlySkipped && !comp.enabled)
+            {
+                Plugin.Instance.skipObject.Remove(self);
+                comp.enabled = true; 
+            }
+
             comp.alreadyPickedUp = true;
             if (comp.isPushed)
             {

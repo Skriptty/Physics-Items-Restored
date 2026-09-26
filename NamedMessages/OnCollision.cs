@@ -9,6 +9,7 @@ namespace Physics_Items.NamedMessages
     internal class OnCollision
     {
         internal static string CollisionCheck = "PhysicsItemsCollisionCheck";
+
         [HarmonyPatch(typeof(StartOfRound), nameof(StartOfRound.Awake)), HarmonyPrefix]
         public static void StartOfRound_Awake()
         {
@@ -26,12 +27,11 @@ namespace Physics_Items.NamedMessages
         {
             NetworkObjectReference value;
             messagePayload.ReadValueSafe(out value);
-            if(value.TryGet(out NetworkObject netobj))
+            if (value.TryGet(out NetworkObject netobj))
             {
                 PhysicsComponent physComp = Utils.Physics.GetPhysicsComponent(netobj.transform.gameObject);
                 if (physComp != null)
                 {
-              
                     if (Plugin.Instance.enableCollisionAudio.Value) 
                     {
                         physComp.PlayDropSFX();

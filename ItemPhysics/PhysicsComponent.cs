@@ -16,7 +16,6 @@ using Collision = UnityEngine.Collision;
 namespace Physics_Items.ItemPhysics
 {
     [RequireComponent(typeof(GrabbableObject))]
-    
     public class PhysicsComponent : MonoBehaviour, IHittable
     {
         public GrabbableObject grabbableObjectRef;
@@ -41,6 +40,10 @@ namespace Physics_Items.ItemPhysics
         
         public int storedHitForce = 0; 
 
+        private float lastSoundTime = 0f;
+        private const float SOUND_COOLDOWN = 0.15f;
+        private const float MIN_SOUND_VELOCITY = 1.2f;
+
         public bool Hit(int force, Vector3 hitDirection, PlayerControllerB playerWhoHit, bool playHitSFX, int hitID)
         {
             return true;
@@ -54,12 +57,12 @@ namespace Physics_Items.ItemPhysics
             if (grabbableObjectRef.propBody != null)
             {
                 rigidbody = grabbableObjectRef.propBody;
-                rigidbody.collisionDetectionMode = CollisionDetectionMode.Continuous;
+                rigidbody.collisionDetectionMode = CollisionDetectionMode.ContinuousSpeculative;
             }
             else if (!TryGetComponent(out rigidbody))
             {
                 rigidbody = gameObject.AddComponent<Rigidbody>();
-                rigidbody.collisionDetectionMode = CollisionDetectionMode.Continuous;
+                rigidbody.collisionDetectionMode = CollisionDetectionMode.ContinuousSpeculative;
                 rigidbody.isKinematic = true; 
             }
 
@@ -85,8 +88,8 @@ namespace Physics_Items.ItemPhysics
             audioSource = Utils.Physics.CopyComponent(gameObject.GetComponent<AudioSource>(), gameObject);
             physicsHelperRef = gameObject.AddComponent<PhysicsHelper>();
             collider = gameObject.GetComponent<Collider>();
-            oldVolume = audioSource.volume;
-            defaultPitch = audioSource.pitch;
+            oldVolume = audioSource != null ? audioSource.volume : 1f;
+            defaultPitch = audioSource != null ? audioSource.pitch : 1f;
             up = grabbableObjectRef.itemProperties.verticalOffset * Vector3.up;
             grabbableObjectRef.itemProperties.syncDiscardFunction = true;
             if (LethalThingsCompatibility.enabled)
@@ -132,6 +135,7 @@ namespace Physics_Items.ItemPhysics
                 transform.position = closestFreeSpot;
             }
         }
+
         public void SetPosition()
         {
             Transform parent = GetParent();
@@ -141,6 +145,7 @@ namespace Physics_Items.ItemPhysics
                 transform.localPosition = relativePosition;
             }
         }
+
         public void SetRotation()
         {
             if (grabbableObjectRef.floorYRot == -1)
@@ -152,11 +157,12 @@ namespace Physics_Items.ItemPhysics
                 transform.rotation = Quaternion.Euler(grabbableObjectRef.itemProperties.restingRotation.x, grabbableObjectRef.floorYRot + grabbableObjectRef.itemProperties.floorYOffset + 90f, grabbableObjectRef.itemProperties.restingRotation.z);
             }
         }
+
         void InitializeVariables()
         {
             alreadyPickedUp = !Plugin.Instance.physicsOnPickup.Value;
             grabbableObjectRef.itemProperties.itemSpawnsOnGround = Plugin.Instance.physicsOnPickup.Value;
-            rigidbody.collisionDetectionMode = CollisionDetectionMode.ContinuousDynamic;
+            rigidbody.collisionDetectionMode = CollisionDetectionMode.ContinuousSpeculative;
             rigidbody.drag = 0.1f;
             if (apparatusRef != null) rigidbody.isKinematic = apparatusRef.isLungDocked || apparatusRef.isLungDockedInElevator || isPlaced;
             else rigidbody.isKinematic = isPlaced;
@@ -221,6 +227,7 @@ namespace Physics_Items.ItemPhysics
         
         public float calculatedMass;
         public float clampedMass;
+
         void Start()
         {
             if (!HasRequiredComponents()) return;
@@ -233,7 +240,6 @@ namespace Physics_Items.ItemPhysics
             throwForce = rigidbody.mass * 10f;
             terminalVelocity = MathF.Sqrt(2 * rigidbody.mass * gravity);
             
-
             if (StartOfRound.Instance.inShipPhase)
             {
                 grabbableObjectRef.fallTime = 1f;
@@ -288,6 +294,7 @@ namespace Physics_Items.ItemPhysics
         private Transform parent;
 
         public bool addedWeight = false;
+
         protected virtual void Update()
         {
             if (isPushed && !addedWeight)
@@ -300,16 +307,30 @@ namespace Physics_Items.ItemPhysics
                 oldValue = Plugin.Instance.ServerHasMod;
                 networkTransform.enabled = Plugin.Instance.ServerHasMod;
             }
+            
             if (apparatusRef != null)
             {
                 bool isDocked = apparatusRef.isLungDocked || apparatusRef.isLungDockedInElevator || (!StartOfRound.Instance.shipHasLanded && !StartOfRound.Instance.inShipPhase || isPlaced);
+                
+                if (Plugin.Instance.freezeInShip.Value && (grabbableObjectRef.isInShipRoom || grabbableObjectRef.isInElevator))
+                {
+                    isDocked = true;
+                }
+
                 if (rigidbody.isKinematic != isDocked) rigidbody.isKinematic = isDocked;
             }
             else
             {
                 bool shouldBeKinematic = ((grabbableObjectRef.isInShipRoom || grabbableObjectRef.isInElevator) && !StartOfRound.Instance.shipHasLanded && !StartOfRound.Instance.inShipPhase) || isPlaced; 
+                
+                if (Plugin.Instance.freezeInShip.Value && (grabbableObjectRef.isInShipRoom || grabbableObjectRef.isInElevator))
+                {
+                    shouldBeKinematic = true;
+                }
+
                 if (rigidbody.isKinematic != shouldBeKinematic) rigidbody.isKinematic = shouldBeKinematic;
             }
+            
             if (grabbableObjectRef.isInShipRoom || grabbableObjectRef.isInElevator)
             {
                 if (rigidbody.isKinematic && !isPlaced)
@@ -332,19 +353,23 @@ namespace Physics_Items.ItemPhysics
 
         public void PlayDropSFX()
         {
+            if (Time.time - lastSoundTime < SOUND_COOLDOWN) return;
+
             var force = Vector3.zero;
             if (isHit)
             {
                 isHit = false;
                 
                 float clampedHitForce = Mathf.Clamp(storedHitForce, 0f, 15f); 
-                
                 float massResistance = Mathf.Max(rigidbody.mass, 1f);
                 float finalKnockback = (clampedHitForce * 4f) / massResistance;
                 
                 force = hitDir * finalKnockback;
                 rigidbody.velocity = force;
             }
+
+            if (velocityMag < MIN_SOUND_VELOCITY && force == Vector3.zero) return;
+
             if (grabbableObjectRef.itemProperties.dropSFX != null)
             {
                 AudioClip clip = grabbableObjectRef.itemProperties.dropSFX;
@@ -353,11 +378,12 @@ namespace Physics_Items.ItemPhysics
                 if (audioSource != null)
                 {
                     if (force != Vector3.zero) vol = Mathf.Min(force.magnitude, Plugin.Instance.maxCollisionVolume.Value);
-                    else vol = Mathf.Clamp(velocityMag, 0.6f, Plugin.Instance.maxCollisionVolume.Value); 
+                    else vol = Mathf.Clamp(velocityMag, 0.2f, Plugin.Instance.maxCollisionVolume.Value); 
                     
                     audioSource.volume = vol.Value; 
                     audioSource.pitch = Utils.Physics.mapValue(rigidbody.velocity.magnitude, .9f, 10f, .9f, defaultPitch + 0.5f);
                     audioSource.PlayOneShot(clip, audioSource.volume);
+                    lastSoundTime = Time.time;
                 }
                 if (grabbableObjectRef.IsOwner)
                 {
@@ -387,6 +413,7 @@ namespace Physics_Items.ItemPhysics
         public bool isPushed = false;
 
         Dictionary<GameObject, PlayerControllerB> Players = new Dictionary<GameObject, PlayerControllerB>();
+
         private PlayerControllerB GetPlayer(GameObject obj)
         {
             if (Players.ContainsKey(obj)) return Players[obj];
@@ -397,21 +424,28 @@ namespace Physics_Items.ItemPhysics
 
         protected virtual void OnCollisionEnter(Collision collision)
         {
-            if (collision.gameObject.layer == 26 && Plugin.Instance.disablePlayerCollision.Value)
+            if (collision.gameObject.layer == 26)
             {
-                Physics.IgnoreCollision(collider, collision.gameObject.GetComponent<Collider>(), true);
-                isPushed = false;
+                if (Plugin.Instance.disablePlayerCollision.Value)
+                {
+                    UnityEngine.Physics.IgnoreCollision(collider, collision.gameObject.GetComponent<Collider>(), true);
+                    isPushed = false;
+                    return;
+                }
+
+                if (GetPlayer(collision.gameObject) == GameNetworkManager.Instance.localPlayerController)
+                {
+                    isPushed = true;
+                }
                 return;
             }
-            if (collision.gameObject.layer == 26 && GetPlayer(collision.gameObject) == GameNetworkManager.Instance.localPlayerController)
-            {
-                isPushed = true;
-            }
+
             if (!firstHit) 
             {
                 firstHit = true;
                 return;
             }
+
             if (IsHostOrServer)
             {
                 NetworkObjectReference networkRef = networkObject;
@@ -422,10 +456,13 @@ namespace Physics_Items.ItemPhysics
                     NetworkManager.Singleton.CustomMessagingManager.SendNamedMessage(OnCollision.CollisionCheck, client.ClientId, writer, NetworkDelivery.ReliableSequenced);
                 }
             }
-            else if (!Plugin.Instance.ServerHasMod) PlayDropSFX();
-            
+            else if (!Plugin.Instance.ServerHasMod) 
+            {
+                PlayDropSFX();
+            }
+    
             velocity = rigidbody.velocity;
-            velocityMag = Utils.Physics.FastInverseSqrt(velocity.sqrMagnitude);
+            velocityMag = velocity.magnitude;
         }
 
         void OnDestroy()
@@ -434,6 +471,7 @@ namespace Physics_Items.ItemPhysics
         }
 
         Vector3? oldPosition;
+
         protected virtual void LateUpdate()
         {
             if (grabbableObjectRef == null)
